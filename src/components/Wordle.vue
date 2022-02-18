@@ -4,7 +4,7 @@ import { words } from '../data/words.js'
 export default {
   data() {
     return {
-      rows: new Array(6).fill([]),
+      rows: new Array(6).fill(new Array(5).fill('')),
       word: words[Math.floor(Math.random() * words.length)],
       input: '',
       finished: false
@@ -30,7 +30,7 @@ export default {
           console.log('word not in dictionary')
           return
         }
-        const targetRowIndex = this.rows.findIndex(row => row.length === 0)
+        const targetRowIndex = this.rows.findIndex(row => row[0] === '')
 
         if (targetRowIndex == 5 || input == this.word) {
           this.finished = true
@@ -55,14 +55,18 @@ export default {
 </script>
 
 <template>
-  <h1>Wordle</h1>
   <div>
-    <p v-for="word in rows">
-      <span v-for="(char, index) in word" :class="charClass(char, index)">{{ char }}</span>
-    </p>
+    <h1>Wordle</h1>
+    <div>
+      <p v-for="word in rows" class="word-row">
+        <div v-for="(char, index) in word" class="word-frame">
+          <span :class="charClass(char, index)">{{ char }}</span>
+        </div>
+      </p>
+    </div>
+    <input type="text" v-model="input" maxlength="5" @keyup="keyUpAction" :disabled="finished">
+    <h5 v-if="finished">{{ gameResult }}</h5>
   </div>
-  <input type="text" v-model="input" maxlength="5" @keyup="keyUpAction" :disabled="finished">
-  <h5 v-if="finished">{{ gameResult }}</h5>
 </template>
 
 <style scoped>
@@ -74,8 +78,22 @@ li {
   list-style: none;
 }
 
+.word-row {
+  display: flex;
+  justify-content: center;
+}
+.word-frame {
+  border: 1px solid #888888;
+  border-radius: 0.2rem;
+  width: 30px;
+  height: 35px;
+  margin: 0 0.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 span {
-  margin: 0 0.5rem;
   font-size: 24px;
 }
 
@@ -86,7 +104,7 @@ span {
   color: rgb(206, 206, 0);
 }
 .text-green {
-  color: rgb(42, 255, 42);
+  color: #42b983;
 }
 
 input {

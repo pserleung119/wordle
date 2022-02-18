@@ -12,7 +12,7 @@ export default {
   },
   computed: {
     gameResult() {
-      if (this.rows.every(word => word.length > 0)) {
+      if (this.rows.every(word => word[0] != '')) {
         return 'Game Over! :('
       }
       return 'Game Finished! :)'

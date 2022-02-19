@@ -4,15 +4,18 @@ import { words } from '../data/words.js'
 export default {
   data() {
     return {
-      rows: new Array(6).fill(new Array(5).fill('')),
-      word: words[Math.floor(Math.random() * words.length)],
+      rows: [],
+      word: '',
       input: '',
       finished: false
     }
   },
+  mounted() {
+    this.initializeSession()
+  },
   computed: {
     gameResult() {
-      if (this.rows.every(word => word[0] != '')) {
+      if (this.rows.every(word => word != '')) {
         return 'Game Over! :('
       }
       return 'Game Finished! :)'
@@ -30,17 +33,19 @@ export default {
           console.log('word not in dictionary')
           return
         }
-        const targetRowIndex = this.rows.findIndex(row => row[0] === '')
+        const targetRowIndex = this.rows.findIndex(row => row === '')
 
         if (targetRowIndex == 5 || input == this.word) {
           this.finished = true
+          this.setFinishFlag(true)
         }
 
-        this.rows[targetRowIndex] = input.split('')
+        this.rows[targetRowIndex] = input
+        this.setAttemptHistory(input, targetRowIndex)
         this.input = ''
       }
     },
-    charClass(char, index) {
+    charStyle(char, index) {
       let klass = 'text-black'
       if (this.word.indexOf(char) != -1) {
         klass = 'text-yellow'
@@ -49,6 +54,31 @@ export default {
         klass = 'text-green'
       }
       return klass
+    },
+    initializeSession() {
+      const date = new Date()
+
+      if (!localStorage.getItem('word') || new Date(JSON.parse(localStorage.getItem('word'))['expiredAt']) < date) {
+        const word = words[Math.floor(Math.random() * words.length)]
+        localStorage.setItem('word', JSON.stringify({
+          word: word,
+          expiredAt: date.setDate(date.getDate() + 1),
+          attemptHistory: new Array(6).fill('')
+        }))
+      }
+      this.word = JSON.parse(localStorage.getItem('word'))['word']
+      this.rows = JSON.parse(localStorage.getItem('word'))['attemptHistory']
+      this.finished = JSON.parse(localStorage.getItem('word'))['finished']
+    },
+    setAttemptHistory(attempt, attemptIndex) {
+      const session = JSON.parse(localStorage.getItem('word'))
+      session['attemptHistory'][attemptIndex] = attempt
+      localStorage.setItem('word', JSON.stringify(session))
+    },
+    setFinishFlag(flag) {
+      const session = JSON.parse(localStorage.getItem('word'))
+      session['finished'] = flag
+      localStorage.setItem('word', JSON.stringify(session))
     }
   }
 }
@@ -59,8 +89,8 @@ export default {
     <h1>Wordle</h1>
     <div>
       <p v-for="word in rows" class="word-row">
-        <div v-for="(char, index) in word" class="word-frame">
-          <span :class="charClass(char, index)">{{ char }}</span>
+        <div v-for="(char, index) in 5" class="word-frame">
+          <span :class="charStyle(word[index], index)">{{ word[index] || '' }}</span>
         </div>
       </p>
     </div>
